@@ -1,389 +1,369 @@
 
 const state = {
   places: [],
-  activeCategory: "全部",
+  filtered: [],
+  markers: new Map(),
   favorites: new Set(JSON.parse(localStorage.getItem("pethub-favorites") || "[]")),
-  markers: new Map()
+  mapMoved: false,
+  activeCategory: "全部"
 };
-
-const categories = ["全部","動物醫療","美容洗護","住宿安親","寵物友善","戶外活動","用品購物","其他服務"];
 
 const els = {
-  search: document.getElementById("searchInput"),
-  city: document.getElementById("citySelect"),
-  open: document.getElementById("openOnly"),
-  h24: document.getElementById("hour24"),
-  verified: document.getElementById("verifiedOnly"),
-  chips: document.getElementById("categoryChips"),
+  heroSearch: document.getElementById("heroSearch"),
+  heroSearchBtn: document.getElementById("heroSearchBtn"),
+  heroLocateBtn: document.getElementById("heroLocateBtn"),
+  filterToggle: document.getElementById("filterToggle"),
+  filterPanel: document.getElementById("filterPanel"),
+  searchInput: document.getElementById("searchInput"),
+  citySelect: document.getElementById("citySelect"),
+  categorySelect: document.getElementById("categorySelect"),
+  sortSelect: document.getElementById("sortSelect"),
+  openOnly: document.getElementById("openOnly"),
+  hour24: document.getElementById("hour24"),
+  verifiedOnly: document.getElementById("verifiedOnly"),
+  clearFilters: document.getElementById("clearFilters"),
+  mapLocateBtn: document.getElementById("mapLocateBtn"),
   results: document.getElementById("results"),
   resultCount: document.getElementById("resultCount"),
-  count24: document.getElementById("count24"),
-  countVerified: document.getElementById("countVerified"),
-  favoriteCount: document.getElementById("favoriteCount"),
-  clearBtn: document.getElementById("clearBtn"),
-  locateBtn: document.getElementById("locateBtn"),
-  dialog: document.getElementById("detailDialog"),
-  dialogContent: document.getElementById("dialogContent"),
-  template: document.getElementById("placeCardTemplate")
+  resultSummary: document.getElementById("resultSummary"),
+  searchAreaBtn: document.getElementById("searchAreaBtn"),
+  detailDialog: document.getElementById("detailDialog"),
+  dialogContent: document.getElementById("dialogContent")
 };
 
-const TAIWAN_BOUNDS = L.latLngBounds(
-  [21.75, 119.30],
-  [25.45, 122.20]
-);
-
-const map = L.map("map", {
-  zoomControl: false,
-  attributionControl: true,
-  preferCanvas: true
-}).setView([23.72, 120.95], 7);
-
-L.control.zoom({ position: "bottomright" }).addTo(map);
-
-L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-  maxZoom: 19,
-  minZoom: 6,
-  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+const TAIWAN_BOUNDS = L.latLngBounds([21.75,119.30],[25.45,122.20]);
+const map = L.map("map",{zoomControl:false,preferCanvas:true}).setView([23.72,120.95],7);
+L.control.zoom({position:"bottomright"}).addTo(map);
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
+  maxZoom:19,minZoom:6,
+  attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 }).addTo(map);
+map.setMaxBounds(TAIWAN_BOUNDS.pad(.55));
 
-map.setMaxBounds(TAIWAN_BOUNDS.pad(0.45));
-
-const resetControl = L.control({ position: "bottomright" });
-resetControl.onAdd = function () {
-  const div = L.DomUtil.create("div", "leaflet-bar pethub-map-control");
-  div.innerHTML = '<button type="button" title="顯示全台" aria-label="顯示全台">⌂</button>';
-  L.DomEvent.disableClickPropagation(div);
-  div.querySelector("button").addEventListener("click", () => {
-    map.fitBounds(TAIWAN_BOUNDS, { padding: [24, 24] });
-  });
-  return div;
-};
-resetControl.addTo(map);
-
-function ensureMapSize() {
-  requestAnimationFrame(() => {
-    map.invalidateSize({ animate: false });
-  });
+function ensureMapSize(){
+  requestAnimationFrame(()=>map.invalidateSize({animate:false}));
 }
-
-window.addEventListener("load", () => {
-  ensureMapSize();
-  setTimeout(ensureMapSize, 150);
-  setTimeout(ensureMapSize, 500);
-});
-
 window.addEventListener("resize", ensureMapSize);
-
-if ("ResizeObserver" in window) {
-  const mapObserver = new ResizeObserver(() => ensureMapSize());
-  mapObserver.observe(document.querySelector(".map-panel"));
+window.addEventListener("load", ()=>{ensureMapSize(); setTimeout(ensureMapSize, 200);});
+if("ResizeObserver" in window){
+  new ResizeObserver(()=>ensureMapSize()).observe(document.querySelector(".map-panel"));
 }
 
-function text(v) {
-  return (v ?? "").toString();
+function escapeHtml(v){
+  return String(v ?? "").replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[ch]));
 }
-
-function placeSearchText(place) {
-  return [
-    place.name, place.category, place.city, place.district, place.address,
-    place.note, ...(place.tags || [])
-  ].map(text).join(" ").toLowerCase();
-}
-
-function filteredPlaces() {
-  const q = els.search.value.trim().toLowerCase();
-  return state.places.filter(place => {
-    if (q && !placeSearchText(place).includes(q)) return false;
-    if (els.city.value && place.city !== els.city.value) return false;
-    if (state.activeCategory !== "全部" && place.category !== state.activeCategory) return false;
-    if (els.open.checked && !place.open) return false;
-    if (els.h24.checked && !place.h24) return false;
-    if (els.verified.checked && !place.verified) return false;
-    return true;
-  });
-}
-
-function saveFavorites() {
+function saveFavorites(){
   localStorage.setItem("pethub-favorites", JSON.stringify([...state.favorites]));
 }
-
-function toggleFavorite(id) {
+function toggleFavorite(id){
   state.favorites.has(id) ? state.favorites.delete(id) : state.favorites.add(id);
   saveFavorites();
-  render();
+  renderResults();
 }
-
-function directionsUrl(place) {
+function directionsUrl(place){
   const dest = encodeURIComponent(place.address || `${place.lat},${place.lng}`);
   return `https://www.google.com/maps/dir/?api=1&destination=${dest}`;
 }
-
-function renderCities() {
-  const cities = [...new Set(state.places.map(p => p.city).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"zh-Hant"));
-  els.city.innerHTML = '<option value="">全台灣</option>' + cities.map(c => `<option>${c}</option>`).join("");
+function categorySymbol(category){
+  return {"動物醫療":"✚","美容洗護":"✂","住宿安親":"🏠","寵物友善":"♥"}[category] || "•";
 }
-
-function renderChips() {
-  els.chips.innerHTML = "";
-  categories.forEach(category => {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "chip" + (category === state.activeCategory ? " active" : "");
-    button.textContent = category;
-    button.addEventListener("click", () => {
-      state.activeCategory = category;
-      renderChips();
-      render();
-    });
-    els.chips.appendChild(button);
+function markerIcon(place){
+  return L.divIcon({
+    className:"pethub-marker-wrap",
+    html:`<div class="pethub-pin${place.h24 ? " is-24" : ""}" data-category="${escapeHtml(place.category)}"><span>${categorySymbol(place.category)}</span></div>`,
+    iconSize:[40,46],
+    iconAnchor:[20,42],
+    popupAnchor:[0,-38]
   });
 }
-
-function badge(label, className="") {
-  const span = document.createElement("span");
-  span.className = `badge ${className}`;
-  span.textContent = label;
-  return span;
+function renderCities(){
+  const cities = [...new Set(state.places.map(p=>p.city).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"zh-Hant"));
+  els.citySelect.innerHTML = '<option value="">全台灣</option>' + cities.map(c=>`<option>${escapeHtml(c)}</option>`).join("");
 }
+function syncCategoryButtons(){
+  document.querySelectorAll(".service-pill").forEach(btn=>{
+    btn.classList.toggle("active", btn.dataset.category === state.activeCategory);
+  });
+  els.categorySelect.value = state.activeCategory;
+}
+function scoreForRecommended(p){
+  return (p.h24 ? .35 : 0) - ((p.distance || 0) / 50) + (p.dataStatus === "已核驗" ? .5 : 0);
+}
+function filterPlaces({withinBounds=false}={}){
+  const q = els.searchInput.value.trim().toLowerCase();
+  const city = els.citySelect.value;
+  const category = state.activeCategory;
+  const bounds = withinBounds ? map.getBounds() : null;
 
-function renderResults(data) {
+  let data = state.places.filter(place=>{
+    const hay = [place.name, place.category, place.subCategory, place.city, place.district, place.address, place.note, ...(place.tags||[])].join(" ").toLowerCase();
+    if(q && !hay.includes(q)) return false;
+    if(city && place.city !== city) return false;
+    if(category !== "全部" && place.category !== category) return false;
+    if(els.openOnly.checked && !place.open) return false;
+    if(els.hour24.checked && !place.h24) return false;
+    if(els.verifiedOnly.checked && !place.verified) return false;
+    if(bounds && !bounds.contains([place.lat, place.lng])) return false;
+    return true;
+  });
+
+  const mode = els.sortSelect.value;
+  if(mode === "distance") data.sort((a,b)=>(a.distance ?? 999) - (b.distance ?? 999));
+  if(mode === "rating") data.sort((a,b)=>String(a.name).localeCompare(String(b.name),"zh-Hant"));
+  if(mode === "recommended") data.sort((a,b)=>scoreForRecommended(b)-scoreForRecommended(a));
+
+  state.filtered = data;
+  renderResults();
+  renderMarkers();
+  updateSummary();
+}
+function updateSummary(){
+  els.resultCount.textContent = state.filtered.length;
+  const city = els.citySelect.value || "全台灣";
+  const cat = state.activeCategory === "全部" ? "毛孩服務" : state.activeCategory;
+  els.resultSummary.textContent = `${city} · ${cat} · ${state.filtered.length} 個結果`;
+}
+function renderResults(){
   els.results.innerHTML = "";
-
-  if (!data.length) {
-    els.results.innerHTML = '<div class="empty">找不到符合條件的地點，請調整搜尋或篩選條件。</div>';
+  if(!state.filtered.length){
+    els.results.innerHTML = '<div class="empty-state"><strong>沒有符合條件的地點</strong><span>可調整篩選或移動地圖後重新搜尋。</span></div>';
     return;
   }
-
-  data.forEach(place => {
-    const card = els.template.content.firstElementChild.cloneNode(true);
-    const badgeRow = card.querySelector(".badge-row");
-    const tagRow = card.querySelector(".tag-row");
-    const favBtn = card.querySelector(".favorite-btn");
-
-    badgeRow.appendChild(badge(place.category));
-    if (place.h24) badgeRow.appendChild(badge("24H"));
-    if (place.verified) badgeRow.appendChild(badge("✓ 已驗證", "verified"));
-
-    card.querySelector(".place-name").textContent = place.name;
-    card.querySelector(".place-meta").textContent =
-      [place.city, place.district, place.open ? "營業中" : "目前未營業／待確認"].filter(Boolean).join(" · ");
-    card.querySelector(".place-note").textContent = place.note || "";
-
-    (place.tags || []).forEach(tagText => {
-      const tag = document.createElement("span");
-      tag.className = "tag";
-      tag.textContent = `#${tagText}`;
-      tagRow.appendChild(tag);
-    });
-
-    favBtn.textContent = state.favorites.has(place.id) ? "★" : "☆";
-    favBtn.addEventListener("click", () => toggleFavorite(place.id));
-    card.querySelector(".detail-btn").addEventListener("click", () => {
-      if (Number.isFinite(place.lat) && Number.isFinite(place.lng)) {
-        map.flyTo([place.lat, place.lng], 15, { duration: 0.55 });
-        const marker = state.markers.get(place.id);
-        if (marker) marker.openPopup();
-      }
-      openDetail(place);
-    });
-    card.querySelector(".nav-btn").addEventListener("click", () => {
-      window.open(directionsUrl(place), "_blank", "noopener,noreferrer");
-    });
-
-    card.addEventListener("click", event => {
-      if (event.target.closest("button")) return;
-      if (Number.isFinite(place.lat) && Number.isFinite(place.lng)) {
-        map.flyTo([place.lat, place.lng], 15, { duration: 0.55 });
-        const marker = state.markers.get(place.id);
-        if (marker) marker.openPopup();
-      }
-    });
-
+  state.filtered.forEach(place=>{
+    const card = document.createElement("article");
+    card.className = "place-card";
+    card.dataset.id = place.id;
+    card.innerHTML = `
+      <div class="place-card-head">
+        <div>
+          <div class="badges">
+            <span class="badge">${escapeHtml(place.subCategory || place.category)}</span>
+            ${place.h24 ? '<span class="badge">24H</span>' : ''}
+            ${place.verified ? '<span class="badge verified">✓ 已驗證</span>' : ''}
+          </div>
+          <h3>${escapeHtml(place.name)}</h3>
+          <div class="place-meta">${escapeHtml([place.city, place.district, place.open ? "營業中" : "目前休息"].filter(Boolean).join(" · "))}</div>
+        </div>
+        <button class="favorite-small" type="button">${state.favorites.has(place.id) ? "♥" : "♡"}</button>
+      </div>
+      <div class="place-rating"><span class="data-status">${escapeHtml(place.dataStatus || "待核驗")}</span><span class="rating-count">最後查核 ${escapeHtml(place.lastChecked || "—")}</span>${place.distance != null ? `<span class="rating-count">· ${place.distance} km</span>` : ""}</div>
+      <p class="place-note">${escapeHtml(place.note || "")}</p>
+      <div class="place-tags">${(place.highlights || place.tags || []).slice(0,3).map(x=>`<span>${escapeHtml(x)}</span>`).join("")}</div>
+      <div class="place-actions">
+        <button class="detail-btn" type="button">查看詳情</button>
+        <button class="nav-btn" type="button">導航</button>
+      </div>
+    `;
+    card.querySelector(".favorite-small").addEventListener("click",e=>{e.stopPropagation();toggleFavorite(place.id);});
+    card.querySelector(".detail-btn").addEventListener("click",e=>{e.stopPropagation();openDetail(place);});
+    card.querySelector(".nav-btn").addEventListener("click",e=>{e.stopPropagation();window.open(directionsUrl(place),"_blank","noopener,noreferrer");});
+    card.addEventListener("mouseenter",()=>highlightPlace(place.id,true));
+    card.addEventListener("mouseleave",()=>highlightPlace(place.id,false));
+    card.addEventListener("click",()=>focusPlace(place));
     els.results.appendChild(card);
   });
 }
-
-
-function categoryIcon(place) {
-  const symbols = {
-    "動物醫療": "＋",
-    "美容洗護": "✦",
-    "住宿安親": "⌂",
-    "寵物友善": "♥",
-    "戶外活動": "♧",
-    "用品購物": "●",
-    "其他服務": "◆"
-  };
-  const symbol = symbols[place.category] || "●";
-  const extra = place.h24 ? " marker-24h" : "";
-  return L.divIcon({
-    className: "pethub-marker-wrap",
-    html: `<div class="pethub-marker${extra}" data-category="${escapeHtml(place.category)}">
-             <span>${symbol}</span>
-           </div>`,
-    iconSize: [38, 46],
-    iconAnchor: [19, 43],
-    popupAnchor: [0, -38]
-  });
-}
-
-function renderMarkers(data) {
-  state.markers.forEach(marker => marker.remove());
+function renderMarkers(){
+  state.markers.forEach(marker=>marker.remove());
   state.markers.clear();
-
   const bounds = [];
 
-  data.forEach(place => {
-    if (!Number.isFinite(place.lat) || !Number.isFinite(place.lng)) return;
-
-    const marker = L.marker([place.lat, place.lng], { icon: categoryIcon(place), riseOnHover: true }).addTo(map);
-    marker.bindPopup(`
-      <div class="popup-title">${escapeHtml(place.name)}</div>
-      <div class="popup-meta">${escapeHtml([place.city, place.district, place.category].filter(Boolean).join(" · "))}</div>
-    `);
-    marker.on("click", () => {
-      map.flyTo([place.lat, place.lng], Math.max(map.getZoom(), 14), { duration: 0.55 });
-    });
+  state.filtered.forEach(place=>{
+    if(!Number.isFinite(place.lat) || !Number.isFinite(place.lng)) return;
+    const marker = L.marker([place.lat, place.lng], {icon: markerIcon(place), riseOnHover:true}).addTo(map);
+    marker.bindPopup(`<strong>${escapeHtml(place.name)}</strong><br><span style="color:#6d778b;font-size:12px">${escapeHtml(place.subCategory || place.category)} · ${escapeHtml(place.dataStatus || "待核驗")}</span>`);
+    marker.on("click", ()=>focusCard(place.id));
     state.markers.set(place.id, marker);
     bounds.push([place.lat, place.lng]);
   });
 
   ensureMapSize();
-
-  if (bounds.length > 1) {
-    map.fitBounds(bounds, { padding: [55,55], maxZoom: 12, animate: false });
-  } else if (bounds.length === 1) {
-    map.setView(bounds[0], 14, { animate: false });
-  } else {
-    map.fitBounds(TAIWAN_BOUNDS, { padding: [24, 24], animate: false });
+  if(!state.mapMoved){
+    if(bounds.length > 1) map.fitBounds(bounds, {padding:[50,50], maxZoom:11, animate:false});
+    else if(bounds.length === 1) map.setView(bounds[0], 14, {animate:false});
+    else map.fitBounds(TAIWAN_BOUNDS, {padding:[30,30], animate:false});
   }
-
-  setTimeout(ensureMapSize, 60);
 }
-
-function escapeHtml(str) {
-  return text(str).replace(/[&<>"']/g, ch => ({
-    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
-  })[ch]);
+function focusPlace(place){
+  if(Number.isFinite(place.lat) && Number.isFinite(place.lng)){
+    map.flyTo([place.lat, place.lng], 15, {duration:.45});
+    const marker = state.markers.get(place.id);
+    if(marker) marker.openPopup();
+  }
+  focusCard(place.id);
 }
-
-function openDetail(place) {
-  const favorite = state.favorites.has(place.id);
+function focusCard(id){
+  document.querySelectorAll(".place-card").forEach(card=>{
+    card.classList.toggle("active", card.dataset.id === id);
+  });
+}
+function highlightPlace(id,on){
+  const marker = state.markers.get(id);
+  if(!marker) return;
+  const el = marker.getElement();
+  if(el) el.style.transform = on ? "scale(1.10)" : "";
+}
+function openDetail(place){
   els.dialogContent.innerHTML = `
-    <div class="dialog-body">
-      <div class="dialog-head">
+    <div class="detail-dialog-body">
+      <div class="dialog-top">
         <div>
-          <div class="badge-row">
-            <span class="badge">${escapeHtml(place.category)}</span>
-            ${place.h24 ? '<span class="badge">24H</span>' : ''}
-            ${place.verified ? '<span class="badge verified">✓ 已驗證</span>' : ''}
-          </div>
-          <h2 style="margin:12px 0 4px">${escapeHtml(place.name)}</h2>
-          <div style="color:var(--muted)">${escapeHtml([place.city, place.district].filter(Boolean).join(" · "))}</div>
+          <div class="dialog-service-label">${escapeHtml(place.subCategory || place.category)}</div>
+          <h3>${escapeHtml(place.name)}</h3>
+          <div class="dialog-address">${escapeHtml([place.city, place.district, place.address].filter(Boolean).join(" · "))}</div>
         </div>
-        <button id="closeDialogBtn" class="ghost-btn" type="button">關閉</button>
+        <button class="dialog-close" id="detailClose">×</button>
       </div>
 
-      <div class="dialog-grid">
-        <div><strong>地址：</strong>${escapeHtml(place.address || "待補充")}</div>
-        <div><strong>電話：</strong>${escapeHtml(place.phone || "待補充")}</div>
-        <div><strong>服務：</strong>${escapeHtml(place.note || "待補充")}</div>
-        <div><strong>狀態：</strong>${place.open ? "目前營業" : "目前未營業／待確認"}${place.h24 ? " · 24H" : ""}</div>
-        <div><strong>資料狀態：</strong>${place.verified ? "✓ 已驗證" : "待進一步驗證"}</div>
-        <div><strong>資料來源：</strong>${escapeHtml(place.source || "待補充")}</div>
+      <div class="place-rating"><span class="data-status">${escapeHtml(place.dataStatus || "待核驗")}</span><span class="rating-count">最後查核 ${escapeHtml(place.lastChecked || "—")}</span></div>
+
+      <div class="dialog-highlights">
+        ${(place.highlights || []).slice(0,3).map(x=>`<span>${escapeHtml(x)}</span>`).join("")}
       </div>
 
-      <div class="card-actions" style="margin-top:20px">
-        <button id="dialogFavoriteBtn" class="secondary-btn" type="button">${favorite ? "★ 已收藏" : "☆ 收藏"}</button>
-        <button id="dialogNavBtn" class="primary-btn" type="button">導航</button>
+      <div class="dialog-info">
+        <div><span>營業狀態</span><strong>${place.h24 ? "24H" : (place.open === true ? "營業中" : (place.open === false ? "目前休息" : "營業狀態待確認"))}</strong></div>
+        <div><span>電話</span><strong>${escapeHtml(place.phone || "待補充")}</strong></div>
+        <div><span>資料來源</span><strong>${escapeHtml(place.source || "待補充")}</strong></div>
+        <div><span>資料狀態</span><strong>${escapeHtml(place.dataStatus || "待核驗")}</strong></div>
+      </div>
+
+      <div class="dialog-actions">
+        <button class="detail-btn" id="dialogFav">${state.favorites.has(place.id) ? "♥ 已收藏" : "♡ 收藏"}</button>
+        <button class="nav-btn" id="dialogNav">開始導航</button>
       </div>
     </div>
   `;
-
-  els.dialog.showModal();
-
-  document.getElementById("closeDialogBtn").addEventListener("click", () => els.dialog.close());
-  document.getElementById("dialogFavoriteBtn").addEventListener("click", () => {
-    toggleFavorite(place.id);
-    els.dialog.close();
-    openDetail(place);
-  });
-  document.getElementById("dialogNavBtn").addEventListener("click", () => {
-    window.open(directionsUrl(place), "_blank", "noopener,noreferrer");
-  });
+  els.detailDialog.showModal();
+  document.getElementById("detailClose").onclick = ()=>els.detailDialog.close();
+  document.getElementById("dialogFav").onclick = ()=>{toggleFavorite(place.id); els.detailDialog.close(); openDetail(place);};
+  document.getElementById("dialogNav").onclick = ()=>window.open(directionsUrl(place), "_blank", "noopener,noreferrer");
 }
-
-function render() {
-  const data = filteredPlaces();
-  els.resultCount.textContent = data.length;
-  els.count24.textContent = data.filter(p => p.h24).length;
-  els.countVerified.textContent = data.filter(p => p.verified).length;
-  els.favoriteCount.textContent = state.favorites.size;
-  renderResults(data);
-  renderMarkers(data);
+function locateUser(){
+  if(!navigator.geolocation){ alert("此瀏覽器不支援定位功能。"); return; }
+  navigator.geolocation.getCurrentPosition(pos=>{
+    const userLocation = [pos.coords.latitude, pos.coords.longitude];
+    map.setView(userLocation, 14);
+    L.circleMarker(userLocation,{radius:8,color:"#2f72ff",fillColor:"#fff",fillOpacity:1,weight:4}).addTo(map).bindPopup("你目前的位置").openPopup();
+  },()=>alert("無法取得定位，請確認瀏覽器位置權限。"),{enableHighAccuracy:true,timeout:10000});
 }
-
-function clearFilters() {
-  els.search.value = "";
-  els.city.value = "";
-  els.open.checked = false;
-  els.h24.checked = false;
-  els.verified.checked = false;
+function clearFilters(){
+  els.searchInput.value = "";
+  els.heroSearch.value = "";
+  els.citySelect.value = "";
   state.activeCategory = "全部";
-  renderChips();
-  render();
+  els.sortSelect.value = "recommended";
+  els.openOnly.checked = false;
+  els.hour24.checked = false;
+  els.verifiedOnly.checked = false;
+  state.mapMoved = false;
+  syncCategoryButtons();
+  filterPlaces();
 }
 
-function locateUser() {
-  if (!navigator.geolocation) {
-    alert("此瀏覽器不支援定位功能。");
-    return;
-  }
-  els.locateBtn.disabled = true;
-  els.locateBtn.textContent = "定位中…";
-  navigator.geolocation.getCurrentPosition(
-    pos => {
-      const here = [pos.coords.latitude, pos.coords.longitude];
-      map.setView(here, 14);
-      L.circleMarker(here, { radius: 8 }).addTo(map).bindPopup("你目前的位置").openPopup();
-      els.locateBtn.disabled = false;
-      els.locateBtn.textContent = "⌖ 我的附近";
-    },
-    () => {
-      alert("無法取得定位。請確認瀏覽器已允許位置權限。");
-      els.locateBtn.disabled = false;
-      els.locateBtn.textContent = "⌖ 我的附近";
-    },
-    { enableHighAccuracy: true, timeout: 10000 }
-  );
+document.querySelectorAll(".service-pill").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    state.activeCategory = btn.dataset.category;
+    syncCategoryButtons();
+    state.mapMoved = false;
+    filterPlaces();
+    document.getElementById("map-section").scrollIntoView({behavior:"smooth", block:"start"});
+  });
+});
+document.querySelectorAll(".hero-shortcuts button[data-query]").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    els.heroSearch.value = btn.dataset.query;
+    els.searchInput.value = btn.dataset.query;
+    filterPlaces();
+    document.getElementById("map-section").scrollIntoView({behavior:"smooth", block:"start"});
+  });
+});
+
+els.heroSearchBtn.addEventListener("click", ()=>{
+  els.searchInput.value = els.heroSearch.value;
+  state.mapMoved = false;
+  filterPlaces();
+  document.getElementById("map-section").scrollIntoView({behavior:"smooth", block:"start"});
+});
+els.heroSearch.addEventListener("keydown", e=>{if(e.key === "Enter") els.heroSearchBtn.click();});
+els.heroLocateBtn.addEventListener("click", locateUser);
+els.mapLocateBtn.addEventListener("click", locateUser);
+els.filterToggle.addEventListener("click", ()=>els.filterPanel.classList.toggle("show"));
+els.clearFilters.addEventListener("click", clearFilters);
+[els.searchInput, els.citySelect, els.sortSelect, els.openOnly, els.hour24, els.verifiedOnly].forEach(el=>{
+  el.addEventListener(el.type === "search" ? "input" : "change", ()=>{
+    state.mapMoved = false;
+    filterPlaces();
+  });
+});
+els.categorySelect.addEventListener("change", ()=>{
+  state.activeCategory = els.categorySelect.value;
+  syncCategoryButtons();
+  state.mapMoved = false;
+  filterPlaces();
+});
+map.on("movestart", ()=>{state.mapMoved = true;});
+map.on("moveend", ()=>{if(state.mapMoved) els.searchAreaBtn.classList.add("show");});
+els.searchAreaBtn.addEventListener("click", ()=>{
+  filterPlaces({withinBounds:true});
+  els.searchAreaBtn.classList.remove("show");
+});
+els.detailDialog.addEventListener("click", e=>{if(e.target === els.detailDialog) els.detailDialog.close();});
+
+
+let deferredInstallPrompt = null;
+const installBtn = document.getElementById("installAppBtn");
+const networkBanner = document.getElementById("networkBanner");
+
+window.addEventListener("beforeinstallprompt", (event) => {
+  event.preventDefault();
+  deferredInstallPrompt = event;
+  if (installBtn) installBtn.hidden = false;
+});
+
+if (installBtn) {
+  installBtn.addEventListener("click", async () => {
+    if (!deferredInstallPrompt) return;
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+    installBtn.hidden = true;
+  });
 }
 
-async function init() {
-  try {
-    const response = await fetch("./data/places.json", { cache: "no-store" });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    state.places = await response.json();
+function updateNetworkState() {
+  if (!networkBanner) return;
+  networkBanner.hidden = navigator.onLine;
+}
+window.addEventListener("online", updateNetworkState);
+window.addEventListener("offline", updateNetworkState);
+updateNetworkState();
 
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js").catch(console.error);
+  });
+}
+
+const merchantJumpBtn = document.getElementById("merchantJumpBtn");
+if (merchantJumpBtn) {
+  merchantJumpBtn.addEventListener("click", () => {
+    document.getElementById("merchant")?.scrollIntoView({ behavior:"smooth", block:"start" });
+  });
+}
+
+async function init(){
+  try{
+    const res = await fetch("./data/places.json", {cache:"no-store"});
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    state.places = await res.json();
     renderCities();
-    renderChips();
-    render();
+    syncCategoryButtons();
+    filterPlaces();
     ensureMapSize();
-    setTimeout(ensureMapSize, 200);
-
-    ["input", "change"].forEach(evt => els.search.addEventListener(evt, render));
-    els.city.addEventListener("change", render);
-    els.open.addEventListener("change", render);
-    els.h24.addEventListener("change", render);
-    els.verified.addEventListener("change", render);
-    els.clearBtn.addEventListener("click", clearFilters);
-    els.locateBtn.addEventListener("click", locateUser);
-    els.dialog.addEventListener("click", event => {
-      if (event.target === els.dialog) els.dialog.close();
-    });
-  } catch (error) {
-    console.error(error);
-    els.results.innerHTML = '<div class="empty">資料載入失敗。若你是直接雙擊 index.html，請改用本機 HTTP Server 或部署到 GitHub Pages。</div>';
+  }catch(err){
+    console.error(err);
+    els.results.innerHTML = '<div class="empty-state"><strong>資料載入失敗</strong><span>請確認網站已透過 HTTP/HTTPS 開啟。</span></div>';
   }
 }
-
 init();

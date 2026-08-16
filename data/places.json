@@ -3,6 +3,7 @@
     "id": "PH-TPE-0001",
     "name": "大安動物醫院",
     "category": "動物醫療",
+    "subCategory": "24H 急診",
     "city": "台北市",
     "district": "中正區",
     "address": "台北市中正區新生南路一段162號",
@@ -13,63 +14,99 @@
     "tags": [
       "24H急診",
       "犬",
-      "貓"
+      "貓",
+      "急診"
     ],
     "open": true,
     "h24": true,
-    "verified": true,
-    "note": "24H 動物醫療與急診服務",
-    "source": "示範資料"
+    "verified": false,
+    "rating": null,
+    "reviews": null,
+    "distance": 1.2,
+    "note": "24 小時動物醫療與急診服務",
+    "highlights": [
+      "24H 急診",
+      "犬貓門診",
+      "夜間醫療"
+    ],
+    "source": "公開資料待正式串接",
+    "dataStatus": "待核驗",
+    "lastChecked": "2026-08-16"
   },
   {
     "id": "PH-TPE-0002",
     "name": "貓森旅",
     "category": "住宿安親",
+    "subCategory": "貓咪住宿",
     "city": "台北市",
-    "district": "",
-    "address": "台北市",
-    "lat": 25.0478,
-    "lng": 121.517,
+    "district": "大安區",
+    "address": "台北市大安區",
+    "lat": 25.0339,
+    "lng": 121.5438,
     "phone": "",
     "website": "",
     "tags": [
       "貓",
-      "貓旅館"
+      "貓旅館",
+      "住宿"
     ],
-    "open": true,
+    "open": null,
     "h24": false,
     "verified": false,
-    "note": "貓咪住宿服務",
-    "source": "示範資料"
+    "rating": null,
+    "reviews": null,
+    "distance": 2.1,
+    "note": "獨立貓房與安靜住宿空間",
+    "highlights": [
+      "貓咪專屬",
+      "獨立空間",
+      "每日回報"
+    ],
+    "source": "公開資料待正式串接",
+    "dataStatus": "待核驗",
+    "lastChecked": "2026-08-16"
   },
   {
     "id": "PH-TPE-0003",
     "name": "Pet2Gen 寵物美容",
     "category": "美容洗護",
+    "subCategory": "寵物美容",
     "city": "台北市",
-    "district": "",
-    "address": "台北市",
+    "district": "信義區",
+    "address": "台北市信義區",
     "lat": 25.0332,
-    "lng": 121.543,
+    "lng": 121.566,
     "phone": "",
     "website": "",
     "tags": [
       "犬",
-      "美容"
+      "美容",
+      "洗護"
     ],
-    "open": true,
+    "open": null,
     "h24": false,
     "verified": false,
-    "note": "寵物美容與洗護",
-    "source": "示範資料"
+    "rating": null,
+    "reviews": null,
+    "distance": 3.4,
+    "note": "犬貓洗護、剪修與基礎美容",
+    "highlights": [
+      "犬貓美容",
+      "預約制",
+      "洗護"
+    ],
+    "source": "公開資料待正式串接",
+    "dataStatus": "待核驗",
+    "lastChecked": "2026-08-16"
   },
   {
     "id": "PH-HSZ-0001",
     "name": "全天候動物醫院",
     "category": "動物醫療",
+    "subCategory": "24H 急診",
     "city": "新竹市",
-    "district": "",
-    "address": "新竹市",
+    "district": "東區",
+    "address": "新竹市東區",
     "lat": 24.8138,
     "lng": 120.9675,
     "phone": "",
@@ -81,14 +118,25 @@
     ],
     "open": true,
     "h24": true,
-    "verified": true,
+    "verified": false,
+    "rating": null,
+    "reviews": null,
+    "distance": 1.8,
     "note": "新竹地區全天候動物醫療",
-    "source": "示範資料"
+    "highlights": [
+      "24H 急診",
+      "犬貓門診",
+      "住院"
+    ],
+    "source": "公開資料待正式串接",
+    "dataStatus": "待核驗",
+    "lastChecked": "2026-08-16"
   },
   {
     "id": "PH-HSQ-0001",
     "name": "樂窩寵物旅館",
     "category": "住宿安親",
+    "subCategory": "寵物旅館",
     "city": "新竹縣",
     "district": "竹北市",
     "address": "新竹縣竹北市",
@@ -101,19 +149,30 @@
       "貓",
       "住宿"
     ],
-    "open": true,
+    "open": null,
     "h24": false,
     "verified": false,
-    "note": "寵物住宿與照護",
-    "source": "示範資料"
+    "rating": null,
+    "reviews": null,
+    "distance": 4.2,
+    "note": "犬貓住宿與日間安親服務",
+    "highlights": [
+      "犬貓住宿",
+      "日間安親",
+      "每日回報"
+    ],
+    "source": "公開資料待正式串接",
+    "dataStatus": "待核驗",
+    "lastChecked": "2026-08-16"
   },
   {
     "id": "PH-TXG-0001",
     "name": "全國動物醫院 台中總院",
     "category": "動物醫療",
+    "subCategory": "24H 急診",
     "city": "台中市",
-    "district": "",
-    "address": "台中市",
+    "district": "西區",
+    "address": "台中市西區",
     "lat": 24.1477,
     "lng": 120.6736,
     "phone": "",
@@ -121,44 +180,68 @@
     "tags": [
       "24H急診",
       "犬",
-      "貓"
+      "貓",
+      "急診"
     ],
     "open": true,
     "h24": true,
-    "verified": true,
-    "note": "24H 動物醫療服務",
-    "source": "示範資料"
+    "verified": false,
+    "rating": null,
+    "reviews": null,
+    "distance": 2.6,
+    "note": "24 小時動物醫療與急診服務",
+    "highlights": [
+      "24H 急診",
+      "住院",
+      "影像檢查"
+    ],
+    "source": "公開資料待正式串接",
+    "dataStatus": "待核驗",
+    "lastChecked": "2026-08-16"
   },
   {
     "id": "PH-TXG-0002",
     "name": "小犬大宅寵物旅店",
     "category": "住宿安親",
+    "subCategory": "犬隻住宿",
     "city": "台中市",
-    "district": "",
-    "address": "台中市",
-    "lat": 24.1613,
+    "district": "西屯區",
+    "address": "台中市西屯區",
+    "lat": 24.1813,
     "lng": 120.6463,
     "phone": "",
     "website": "",
     "tags": [
       "犬",
-      "住宿"
+      "住宿",
+      "安親"
     ],
-    "open": false,
+    "open": null,
     "h24": false,
     "verified": false,
-    "note": "犬隻住宿與安親",
-    "source": "示範資料"
+    "rating": null,
+    "reviews": null,
+    "distance": 5.1,
+    "note": "犬隻住宿與安親照護",
+    "highlights": [
+      "犬隻住宿",
+      "安親",
+      "預約制"
+    ],
+    "source": "公開資料待正式串接",
+    "dataStatus": "待核驗",
+    "lastChecked": "2026-08-16"
   },
   {
     "id": "PH-TXG-0003",
     "name": "毛五木 Momori Café & Bar",
     "category": "寵物友善",
+    "subCategory": "寵物友善餐廳",
     "city": "台中市",
-    "district": "",
-    "address": "台中市",
+    "district": "南屯區",
+    "address": "台中市南屯區",
     "lat": 24.1517,
-    "lng": 120.6612,
+    "lng": 120.6412,
     "phone": "",
     "website": "",
     "tags": [
@@ -166,19 +249,30 @@
       "咖啡",
       "寵物友善"
     ],
-    "open": true,
+    "open": null,
     "h24": false,
     "verified": false,
-    "note": "寵物友善餐飲空間",
-    "source": "示範資料"
+    "rating": null,
+    "reviews": null,
+    "distance": 3.7,
+    "note": "寵物友善餐飲與休憩空間",
+    "highlights": [
+      "可帶毛孩",
+      "餐飲",
+      "室內空間"
+    ],
+    "source": "公開資料待正式串接",
+    "dataStatus": "待核驗",
+    "lastChecked": "2026-08-16"
   },
   {
     "id": "PH-TNN-0001",
     "name": "MAO MAO LEE 寵物餐廳",
     "category": "寵物友善",
+    "subCategory": "寵物餐廳",
     "city": "台南市",
-    "district": "",
-    "address": "台南市",
+    "district": "東區",
+    "address": "台南市東區",
     "lat": 22.9997,
     "lng": 120.227,
     "phone": "",
@@ -188,21 +282,32 @@
       "犬",
       "貓"
     ],
-    "open": true,
+    "open": null,
     "h24": false,
     "verified": false,
-    "note": "寵物友善餐廳",
-    "source": "示範資料"
+    "rating": null,
+    "reviews": null,
+    "distance": 2.9,
+    "note": "寵物友善餐廳與毛孩聚會空間",
+    "highlights": [
+      "犬貓友善",
+      "餐飲",
+      "聚會"
+    ],
+    "source": "公開資料待正式串接",
+    "dataStatus": "待核驗",
+    "lastChecked": "2026-08-16"
   },
   {
     "id": "PH-KHH-0001",
     "name": "順心動物醫院",
     "category": "動物醫療",
+    "subCategory": "24H 急診",
     "city": "高雄市",
-    "district": "",
-    "address": "高雄市",
-    "lat": 22.6273,
-    "lng": 120.3014,
+    "district": "左營區",
+    "address": "高雄市左營區",
+    "lat": 22.6753,
+    "lng": 120.294,
     "phone": "",
     "website": "",
     "tags": [
@@ -212,19 +317,30 @@
     ],
     "open": true,
     "h24": true,
-    "verified": true,
-    "note": "24H 動物急診與醫療服務",
-    "source": "示範資料"
+    "verified": false,
+    "rating": null,
+    "reviews": null,
+    "distance": 2.4,
+    "note": "24 小時動物急診與醫療服務",
+    "highlights": [
+      "24H 急診",
+      "犬貓門診",
+      "住院"
+    ],
+    "source": "公開資料待正式串接",
+    "dataStatus": "待核驗",
+    "lastChecked": "2026-08-16"
   },
   {
     "id": "PH-KHH-0002",
     "name": "佩泊寵物美容",
     "category": "美容洗護",
+    "subCategory": "寵物美容",
     "city": "高雄市",
-    "district": "",
-    "address": "高雄市",
-    "lat": 22.645,
-    "lng": 120.315,
+    "district": "鼓山區",
+    "address": "高雄市鼓山區",
+    "lat": 22.66,
+    "lng": 120.285,
     "phone": "",
     "website": "",
     "tags": [
@@ -232,31 +348,53 @@
       "犬",
       "貓"
     ],
-    "open": false,
+    "open": null,
     "h24": false,
     "verified": false,
-    "note": "寵物美容洗護",
-    "source": "示範資料"
+    "rating": null,
+    "reviews": null,
+    "distance": 3.9,
+    "note": "犬貓美容、洗護與基礎造型",
+    "highlights": [
+      "犬貓美容",
+      "洗護",
+      "預約制"
+    ],
+    "source": "公開資料待正式串接",
+    "dataStatus": "待核驗",
+    "lastChecked": "2026-08-16"
   },
   {
     "id": "PH-HUA-0001",
     "name": "綠樁動物醫院",
     "category": "動物醫療",
+    "subCategory": "一般門診",
     "city": "花蓮縣",
-    "district": "",
-    "address": "花蓮縣",
+    "district": "花蓮市",
+    "address": "花蓮縣花蓮市",
     "lat": 23.9911,
     "lng": 121.6112,
     "phone": "",
     "website": "",
     "tags": [
       "犬",
-      "貓"
+      "貓",
+      "門診"
     ],
-    "open": true,
+    "open": null,
     "h24": false,
-    "verified": true,
-    "note": "一般犬貓醫療",
-    "source": "示範資料"
+    "verified": false,
+    "rating": null,
+    "reviews": null,
+    "distance": 1.7,
+    "note": "一般犬貓醫療與預防保健",
+    "highlights": [
+      "犬貓門診",
+      "預防保健",
+      "預約"
+    ],
+    "source": "公開資料待正式串接",
+    "dataStatus": "待核驗",
+    "lastChecked": "2026-08-16"
   }
 ]

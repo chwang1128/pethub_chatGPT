@@ -1,0 +1,18 @@
+{
+  "name": "PetHub Taiwan 毛孩服務地圖",
+  "short_name": "PetHub",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f5f7fb",
+  "theme_color": "#2f72ff",
+  "lang": "zh-Hant-TW",
+  "description": "搜尋台灣動物醫療、美容、住宿安親與寵物友善服務。",
+  "icons": [
+    {
+      "src": "./favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
