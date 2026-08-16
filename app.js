@@ -27,11 +27,57 @@ const els = {
   template: document.getElementById("placeCardTemplate")
 };
 
-const map = L.map("map", { zoomControl: true }).setView([23.75, 120.95], 7);
+const TAIWAN_BOUNDS = L.latLngBounds(
+  [21.75, 119.30],
+  [25.45, 122.20]
+);
+
+const map = L.map("map", {
+  zoomControl: false,
+  attributionControl: true,
+  preferCanvas: true
+}).setView([23.72, 120.95], 7);
+
+L.control.zoom({ position: "bottomright" }).addTo(map);
+
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   maxZoom: 19,
+  minZoom: 6,
   attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 }).addTo(map);
+
+map.setMaxBounds(TAIWAN_BOUNDS.pad(0.45));
+
+const resetControl = L.control({ position: "bottomright" });
+resetControl.onAdd = function () {
+  const div = L.DomUtil.create("div", "leaflet-bar pethub-map-control");
+  div.innerHTML = '<button type="button" title="顯示全台" aria-label="顯示全台">⌂</button>';
+  L.DomEvent.disableClickPropagation(div);
+  div.querySelector("button").addEventListener("click", () => {
+    map.fitBounds(TAIWAN_BOUNDS, { padding: [24, 24] });
+  });
+  return div;
+};
+resetControl.addTo(map);
+
+function ensureMapSize() {
+  requestAnimationFrame(() => {
+    map.invalidateSize({ animate: false });
+  });
+}
+
+window.addEventListener("load", () => {
+  ensureMapSize();
+  setTimeout(ensureMapSize, 150);
+  setTimeout(ensureMapSize, 500);
+});
+
+window.addEventListener("resize", ensureMapSize);
+
+if ("ResizeObserver" in window) {
+  const mapObserver = new ResizeObserver(() => ensureMapSize());
+  mapObserver.observe(document.querySelector(".map-panel"));
+}
 
 function text(v) {
   return (v ?? "").toString();
@@ -132,12 +178,52 @@ function renderResults(data) {
 
     favBtn.textContent = state.favorites.has(place.id) ? "★" : "☆";
     favBtn.addEventListener("click", () => toggleFavorite(place.id));
-    card.querySelector(".detail-btn").addEventListener("click", () => openDetail(place));
+    card.querySelector(".detail-btn").addEventListener("click", () => {
+      if (Number.isFinite(place.lat) && Number.isFinite(place.lng)) {
+        map.flyTo([place.lat, place.lng], 15, { duration: 0.55 });
+        const marker = state.markers.get(place.id);
+        if (marker) marker.openPopup();
+      }
+      openDetail(place);
+    });
     card.querySelector(".nav-btn").addEventListener("click", () => {
       window.open(directionsUrl(place), "_blank", "noopener,noreferrer");
     });
 
+    card.addEventListener("click", event => {
+      if (event.target.closest("button")) return;
+      if (Number.isFinite(place.lat) && Number.isFinite(place.lng)) {
+        map.flyTo([place.lat, place.lng], 15, { duration: 0.55 });
+        const marker = state.markers.get(place.id);
+        if (marker) marker.openPopup();
+      }
+    });
+
     els.results.appendChild(card);
+  });
+}
+
+
+function categoryIcon(place) {
+  const symbols = {
+    "動物醫療": "＋",
+    "美容洗護": "✦",
+    "住宿安親": "⌂",
+    "寵物友善": "♥",
+    "戶外活動": "♧",
+    "用品購物": "●",
+    "其他服務": "◆"
+  };
+  const symbol = symbols[place.category] || "●";
+  const extra = place.h24 ? " marker-24h" : "";
+  return L.divIcon({
+    className: "pethub-marker-wrap",
+    html: `<div class="pethub-marker${extra}" data-category="${escapeHtml(place.category)}">
+             <span>${symbol}</span>
+           </div>`,
+    iconSize: [38, 46],
+    iconAnchor: [19, 43],
+    popupAnchor: [0, -38]
   });
 }
 
@@ -150,21 +236,29 @@ function renderMarkers(data) {
   data.forEach(place => {
     if (!Number.isFinite(place.lat) || !Number.isFinite(place.lng)) return;
 
-    const marker = L.marker([place.lat, place.lng]).addTo(map);
+    const marker = L.marker([place.lat, place.lng], { icon: categoryIcon(place), riseOnHover: true }).addTo(map);
     marker.bindPopup(`
       <div class="popup-title">${escapeHtml(place.name)}</div>
       <div class="popup-meta">${escapeHtml([place.city, place.district, place.category].filter(Boolean).join(" · "))}</div>
     `);
-    marker.on("click", () => {});
+    marker.on("click", () => {
+      map.flyTo([place.lat, place.lng], Math.max(map.getZoom(), 14), { duration: 0.55 });
+    });
     state.markers.set(place.id, marker);
     bounds.push([place.lat, place.lng]);
   });
 
+  ensureMapSize();
+
   if (bounds.length > 1) {
-    map.fitBounds(bounds, { padding: [42,42], maxZoom: 13 });
+    map.fitBounds(bounds, { padding: [55,55], maxZoom: 12, animate: false });
   } else if (bounds.length === 1) {
-    map.setView(bounds[0], 14);
+    map.setView(bounds[0], 14, { animate: false });
+  } else {
+    map.fitBounds(TAIWAN_BOUNDS, { padding: [24, 24], animate: false });
   }
+
+  setTimeout(ensureMapSize, 60);
 }
 
 function escapeHtml(str) {
@@ -273,6 +367,8 @@ async function init() {
     renderCities();
     renderChips();
     render();
+    ensureMapSize();
+    setTimeout(ensureMapSize, 200);
 
     ["input", "change"].forEach(evt => els.search.addEventListener(evt, render));
     els.city.addEventListener("change", render);

@@ -107,9 +107,10 @@ h1 { margin-bottom: 10px; font-size: clamp(32px, 4vw, 54px); letter-spacing: -.0
 
 .workspace {
   display: grid;
-  grid-template-columns: minmax(360px, .8fr) minmax(0, 1.25fr);
+  grid-template-columns: minmax(380px, 0.78fr) minmax(560px, 1.35fr);
   gap: 16px;
-  min-height: 680px;
+  min-height: 720px;
+  align-items: stretch;
 }
 .results-panel, .map-panel {
   background: var(--panel);
@@ -117,11 +118,27 @@ h1 { margin-bottom: 10px; font-size: clamp(32px, 4vw, 54px); letter-spacing: -.0
   border-radius: 24px;
   overflow: hidden;
   box-shadow: var(--shadow);
+  min-width: 0;
 }
-.results-panel { padding: 18px; }
+.results-panel {
+  padding: 18px;
+  height: 720px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
 .panel-head { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-bottom: 14px; }
 .panel-head h2 { margin: 0; }
-.results { display: grid; gap: 12px; max-height: 720px; overflow: auto; padding-right: 4px; }
+.results {
+  display: grid;
+  gap: 12px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 6px;
+  flex: 1;
+  min-height: 0;
+  scrollbar-gutter: stable;
+}
 
 .place-card {
   border: 1px solid var(--line);
@@ -152,8 +169,20 @@ h1 { margin-bottom: 10px; font-size: clamp(32px, 4vw, 54px); letter-spacing: -.0
 .primary-btn { border: 1px solid var(--brand); background: var(--brand); color: #fff; }
 .secondary-btn, .ghost-btn { border: 1px solid var(--line); background: transparent; color: var(--ink); }
 
-.map-panel { position: relative; min-height: 680px; }
-#map { width: 100%; height: 100%; min-height: 680px; }
+.map-panel {
+  position: relative;
+  height: 720px;
+  min-height: 720px;
+  isolation: isolate;
+}
+#map {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  background: #e8e4df;
+}
 .map-note {
   position: absolute; z-index: 500; left: 16px; right: 16px; bottom: 16px;
   display: flex; flex-direction: column; gap: 4px;
@@ -186,11 +215,7 @@ dialog::backdrop { background: rgba(30, 23, 20, .48); backdrop-filter: blur(2px)
 .popup-title { font-weight: 800; margin-bottom: 4px; }
 .popup-meta { color: var(--muted); font-size: 12px; }
 
-@media (max-width: 980px) {
-  .workspace { grid-template-columns: 1fr; }
-  .results { max-height: none; }
-  .map-panel, #map { min-height: 520px; }
-}
+
 @media (max-width: 720px) {
   .topbar { padding: 0 16px; }
   .app-shell { width: min(100% - 24px, 1500px); margin-top: 16px; }
@@ -198,5 +223,126 @@ dialog::backdrop { background: rgba(30, 23, 20, .48); backdrop-filter: blur(2px)
   .search-grid { grid-template-columns: 1fr; }
   .stats { grid-template-columns: repeat(2, 1fr); }
   .workspace { min-height: 0; }
-  .map-panel, #map { min-height: 460px; }
+  .map-panel, #map { height: 500px; min-height: 500px; }
+}
+
+
+/* --- PetHub map polish --- */
+.leaflet-container {
+  font-family: inherit;
+  background: #ebe7e2;
+}
+
+.leaflet-control-zoom,
+.pethub-map-control {
+  border: 0 !important;
+  box-shadow: 0 8px 22px rgba(44, 30, 24, .16) !important;
+}
+
+.leaflet-control-zoom a,
+.pethub-map-control button {
+  width: 42px !important;
+  height: 42px !important;
+  line-height: 42px !important;
+  display: grid !important;
+  place-items: center;
+  border: 0 !important;
+  background: rgba(255,253,251,.97) !important;
+  color: var(--ink) !important;
+  font-size: 20px !important;
+}
+
+.pethub-map-control button {
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.pethub-marker-wrap {
+  background: transparent !important;
+  border: 0 !important;
+}
+
+.pethub-marker {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  border-radius: 50% 50% 50% 10%;
+  transform: rotate(-45deg);
+  display: grid;
+  place-items: center;
+  background: #7b5847;
+  border: 3px solid #fff;
+  box-shadow: 0 7px 16px rgba(58, 37, 28, .28);
+}
+
+.pethub-marker span {
+  transform: rotate(45deg);
+  display: block;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.pethub-marker[data-category="動物醫療"] { background: #8a4f48; }
+.pethub-marker[data-category="美容洗護"] { background: #9b6f50; }
+.pethub-marker[data-category="住宿安親"] { background: #6b7251; }
+.pethub-marker[data-category="寵物友善"] { background: #8a637b; }
+.pethub-marker[data-category="戶外活動"] { background: #52705e; }
+.pethub-marker[data-category="用品購物"] { background: #5c687a; }
+.pethub-marker[data-category="其他服務"] { background: #71665f; }
+
+.pethub-marker.marker-24h::after {
+  content: "24";
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  transform: rotate(45deg);
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #2f2926;
+  color: white;
+  border: 2px solid #fff;
+  font-size: 8px;
+  font-weight: 800;
+}
+
+.place-card {
+  transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+}
+.place-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 22px rgba(63,41,31,.07);
+}
+
+.leaflet-popup-content-wrapper {
+  border-radius: 14px;
+  box-shadow: 0 12px 32px rgba(48, 32, 25, .18);
+}
+
+@media (max-width: 1180px) {
+  .workspace {
+    grid-template-columns: minmax(340px, .85fr) minmax(460px, 1.15fr);
+  }
+}
+
+@media (max-width: 980px) {
+  .workspace {
+    grid-template-columns: 1fr;
+  }
+  .results-panel {
+    height: auto;
+    max-height: none;
+  }
+  .results {
+    max-height: 540px;
+  }
+  .map-panel,
+  #map {
+    height: 580px;
+    min-height: 580px;
+  }
 }

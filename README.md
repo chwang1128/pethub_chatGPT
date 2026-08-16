@@ -1,4 +1,4 @@
-# PetHub Map Web MVP
+# PetHub Map Web MVP v0.2
 
 台灣毛小孩生活地圖 MVP。  
 目前為靜態前端版本，可部署至 GitHub Pages、Vercel、Netlify 或一般 Web Server。
@@ -107,3 +107,12 @@ https://<你的GitHub帳號>.github.io/pethub-map/
 
 > 注意：MVP 內的部分店家資料目前為示範用途，正式公開前應逐筆核驗。
 
+
+## v0.2 地圖修正
+- 修正 Leaflet 圖磚只顯示局部的 resize 問題
+- 地圖完整填滿右側容器
+- 視窗尺寸改變自動重算
+- 分類式自訂 Marker
+- 24H Marker 標記
+- 顯示全台控制鍵
+- 點選店家自動移動地圖
