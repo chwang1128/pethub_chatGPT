@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description" content="PetHub Taiwan 毛小孩地圖：搜尋台灣動物醫院、寵物美容、住宿、友善空間與其他毛孩服務。" />
+  <meta name="theme-color" content="#7b5847" />
+  <title>PetHub Taiwan｜毛小孩地圖</title>
+
+  <link rel="preconnect" href="https://unpkg.com">
+  <link rel="preconnect" href="https://tile.openstreetmap.org">
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIINfQ3ynJPVbWPn9tJSUckQJLjZuzMZJyk="
+    crossorigin=""
+  />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#" aria-label="PetHub Taiwan 首頁">
+      <span class="brand-mark">P</span>
+      <span>
+        <strong>PetHub Taiwan</strong>
+        <small>毛小孩生活地圖</small>
+      </span>
+    </a>
+    <button id="locateBtn" class="ghost-btn" type="button">⌖ 我的附近</button>
+  </header>
+
+  <main class="app-shell">
+    <section class="hero">
+      <p class="eyebrow">PET MAP TAIWAN</p>
+      <h1>今天想幫毛孩找什麼？</h1>
+      <p class="hero-copy">搜尋動物醫院、美容、住宿、寵物友善空間，以及各種毛孩服務。</p>
+
+      <div class="search-grid">
+        <label class="field field-wide">
+          <span>搜尋</span>
+          <input id="searchInput" type="search" placeholder="例如：24H 急診、貓旅館、新竹美容" autocomplete="off" />
+        </label>
+        <label class="field">
+          <span>縣市</span>
+          <select id="citySelect">
+            <option value="">全台灣</option>
+          </select>
+        </label>
+      </div>
+
+      <div id="categoryChips" class="chips" aria-label="服務分類"></div>
+
+      <div class="toggles">
+        <label><input id="openOnly" type="checkbox"> 目前營業</label>
+        <label><input id="hour24" type="checkbox"> 24H</label>
+        <label><input id="verifiedOnly" type="checkbox"> 已驗證</label>
+      </div>
+    </section>
+
+    <section class="stats" aria-label="搜尋統計">
+      <article><span>目前結果</span><strong id="resultCount">0</strong><small>個地點</small></article>
+      <article><span>24H</span><strong id="count24">0</strong><small>個服務點</small></article>
+      <article><span>已驗證</span><strong id="countVerified">0</strong><small>筆資料</small></article>
+      <article><span>已收藏</span><strong id="favoriteCount">0</strong><small>個地點</small></article>
+    </section>
+
+    <section class="workspace">
+      <aside class="results-panel">
+        <div class="panel-head">
+          <div>
+            <p class="eyebrow">RESULTS</p>
+            <h2>搜尋結果</h2>
+          </div>
+          <button id="clearBtn" class="ghost-btn" type="button">清除篩選</button>
+        </div>
+        <div id="results" class="results" aria-live="polite"></div>
+      </aside>
+
+      <section class="map-panel" aria-label="PetHub 地圖">
+        <div id="map"></div>
+        <div class="map-note">
+          <strong>MVP 資料說明</strong>
+          <span>目前內建示範資料；正式版可接農業部、地方政府 Open Data 與店家認領資料。</span>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <dialog id="detailDialog">
+    <div id="dialogContent"></div>
+  </dialog>
+
+  <template id="placeCardTemplate">
+    <article class="place-card">
+      <div class="place-card-top">
+        <div>
+          <div class="badge-row"></div>
+          <h3 class="place-name"></h3>
+          <p class="place-meta"></p>
+          <p class="place-note"></p>
+          <div class="tag-row"></div>
+        </div>
+        <button class="favorite-btn" type="button" aria-label="收藏">☆</button>
+      </div>
+      <div class="card-actions">
+        <button class="secondary-btn detail-btn" type="button">查看詳情</button>
+        <button class="primary-btn nav-btn" type="button">導航</button>
+      </div>
+    </article>
+  </template>
+
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin="">
+  </script>
+  <script src="./app.js" defer></script>
+</body>
+</html>
